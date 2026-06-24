@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Shark Controller</title>
+<title>Hand STL Viewer</title>
 
 <link rel="stylesheet" href="style.css">
 
@@ -12,17 +12,23 @@
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
 
 </head>
+
 <body>
+
+<input
+    type="file"
+    id="stlUpload"
+    accept=".stl">
 
 <div id="viewer"></div>
 
 <video
-id="video"
-autoplay
-playsinline>
+    id="video"
+    autoplay
+    playsinline>
 </video>
 
-<script type="module" src="./script.js"></script>
+<script type="module" src="script.js"></script>
 
 </body>
 </html>
