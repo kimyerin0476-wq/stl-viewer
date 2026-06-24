@@ -1,2 +1,0 @@
-# stl-viewer
-stl viewer
