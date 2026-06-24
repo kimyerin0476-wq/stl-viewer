@@ -1,24 +1,24 @@
-import * as THREE from "https://unpkg.com/three@0.161.0/build/three.module.js";
+import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.161.0/build/three.module.js";
+import { STLLoader } from "https://cdn.jsdelivr.net/npm/three@0.161.0/examples/jsm/loaders/STLLoader.js";
+import { OrbitControls } from "https://cdn.jsdelivr.net/npm/three@0.161.0/examples/jsm/controls/OrbitControls.js";
 
-import { STLLoader } from "https://unpkg.com/three@0.161.0/examples/jsm/loaders/STLLoader.js?module";
-
-import { OrbitControls } from "https://unpkg.com/three@0.161.0/examples/jsm/controls/OrbitControls.js?module";
-
+// Scene
 const scene = new THREE.Scene();
-
 scene.background = new THREE.Color(0x87ceeb);
 
+// Camera
 const camera = new THREE.PerspectiveCamera(
     75,
-    window.innerWidth/window.innerHeight,
+    window.innerWidth / window.innerHeight,
     0.1,
     2000
 );
 
-camera.position.set(0,0,200);
+camera.position.set(0, 0, 200);
 
+// Renderer
 const renderer = new THREE.WebGLRenderer({
-    antialias:true
+    antialias: true
 });
 
 renderer.setSize(
@@ -27,59 +27,58 @@ renderer.setSize(
 );
 
 document
-.getElementById("viewer")
-.appendChild(renderer.domElement);
+    .getElementById("viewer")
+    .appendChild(renderer.domElement);
 
-const controls =
-new OrbitControls(
+// Orbit Controls
+const controls = new OrbitControls(
     camera,
     renderer.domElement
 );
 
 controls.enableDamping = true;
 
-const ambient =
-new THREE.AmbientLight(
+// Lighting
+const ambientLight = new THREE.AmbientLight(
     0xffffff,
     2
 );
 
-scene.add(ambient);
+scene.add(ambientLight);
 
-const directional =
-new THREE.DirectionalLight(
-    0xffffff,
-    3
-);
+const directionalLight =
+    new THREE.DirectionalLight(
+        0xffffff,
+        3
+    );
 
-directional.position.set(
+directionalLight.position.set(
     100,
     100,
     100
 );
 
-scene.add(directional);
+scene.add(directionalLight);
 
-let shark;
+// STL Model
+let shark = null;
 
-const loader =
-new STLLoader();
+const loader = new STLLoader();
 
 loader.load(
     "./models/Shark.stl",
 
-    function(geometry){
+    function (geometry) {
 
         geometry.center();
 
         const material =
-        new THREE.MeshPhongMaterial({
-            color:0x4aa3ff,
-            shininess:100
-        });
+            new THREE.MeshPhongMaterial({
+                color: 0x4aa3ff,
+                shininess: 100
+            });
 
-        shark =
-        new THREE.Mesh(
+        shark = new THREE.Mesh(
             geometry,
             material
         );
@@ -91,79 +90,91 @@ loader.load(
         );
 
         scene.add(shark);
+
+        console.log("Shark STL Loaded");
+    },
+
+    undefined,
+
+    function (error) {
+        console.error("STL Load Error:", error);
     }
 );
 
+// Webcam
 const video =
-document.getElementById("video");
+    document.getElementById("video");
 
-const hands =
-new Hands({
+// MediaPipe Hands
+const hands = new Hands({
 
-    locateFile:(file)=>{
+    locateFile: (file) => {
         return `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`;
     }
 });
 
 hands.setOptions({
 
-    maxNumHands:1,
+    maxNumHands: 1,
 
-    modelComplexity:1,
+    modelComplexity: 1,
 
-    minDetectionConfidence:0.7,
+    minDetectionConfidence: 0.7,
 
-    minTrackingConfidence:0.7
+    minTrackingConfidence: 0.7
 });
 
 let scaleValue = 0.05;
 
-hands.onResults((results)=>{
+hands.onResults((results) => {
 
-    if(
+    if (
         !results.multiHandLandmarks ||
-        results.multiHandLandmarks.length===0
-    ){
+        results.multiHandLandmarks.length === 0
+    ) {
         return;
     }
 
     const hand =
-    results.multiHandLandmarks[0];
+        results.multiHandLandmarks[0];
 
     const thumb =
-    hand[4];
+        hand[4];
 
     const index =
-    hand[8];
+        hand[8];
 
     const middle =
-    hand[12];
+        hand[12];
 
-    if(shark){
+    if (shark) {
 
+        // Move Shark
         shark.position.x =
-        (index.x-0.5)*150;
+            (index.x - 0.5) * 150;
 
         shark.position.y =
-        -(index.y-0.5)*150;
+            -(index.y - 0.5) * 150;
 
+        // Pinch Scale
         const dx =
-        thumb.x-index.x;
+            thumb.x - index.x;
 
         const dy =
-        thumb.y-index.y;
+            thumb.y - index.y;
 
         const distance =
-        Math.sqrt(
-            dx*dx+dy*dy
-        );
+            Math.sqrt(
+                dx * dx +
+                dy * dy
+            );
 
         scaleValue =
-        THREE.MathUtils.clamp(
-            distance*0.5,
-            0.02,
-            0.3
-        );
+            THREE.MathUtils.clamp(
+                distance * 0.5,
+                0.02,
+                0.3
+            );
 
         shark.scale.set(
             scaleValue,
@@ -171,35 +182,40 @@ hands.onResults((results)=>{
             scaleValue
         );
 
-        const fingersUp =
-        Math.abs(index.y-middle.y)<0.05;
+        // Rotate with 2 fingers
+        const twoFingerMode =
+            Math.abs(
+                index.y - middle.y
+            ) < 0.05;
 
-        if(fingersUp){
+        if (twoFingerMode) {
 
             shark.rotation.y += 0.05;
         }
     }
 });
 
+// Camera Feed
 const webcam =
-new Camera(video,{
+    new Camera(video, {
 
-    onFrame:async()=>{
+        onFrame: async () => {
 
-        await hands.send({
-            image:video
-        });
-    },
+            await hands.send({
+                image: video
+            });
+        },
 
-    width:640,
-    height:480
-});
+        width: 640,
+        height: 480
+    });
 
 webcam.start();
 
+// Animation
 let swimTime = 0;
 
-function animate(){
+function animate() {
 
     requestAnimationFrame(
         animate
@@ -207,15 +223,15 @@ function animate(){
 
     controls.update();
 
-    if(shark){
+    if (shark) {
 
         swimTime += 0.03;
 
         shark.position.z =
-        Math.sin(swimTime)*10;
+            Math.sin(swimTime) * 10;
 
         shark.rotation.z =
-        Math.sin(swimTime)*0.1;
+            Math.sin(swimTime) * 0.1;
     }
 
     renderer.render(
@@ -226,13 +242,14 @@ function animate(){
 
 animate();
 
+// Resize
 window.addEventListener(
     "resize",
-    ()=>{
+    () => {
 
         camera.aspect =
-        window.innerWidth/
-        window.innerHeight;
+            window.innerWidth /
+            window.innerHeight;
 
         camera.updateProjectionMatrix();
 
