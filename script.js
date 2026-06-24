@@ -38,7 +38,7 @@ const controls = new OrbitControls(
 
 controls.enableDamping = true;
 
-// Lighting
+// Light
 const ambientLight = new THREE.AmbientLight(
     0xffffff,
     2
@@ -46,11 +46,10 @@ const ambientLight = new THREE.AmbientLight(
 
 scene.add(ambientLight);
 
-const directionalLight =
-    new THREE.DirectionalLight(
-        0xffffff,
-        3
-    );
+const directionalLight = new THREE.DirectionalLight(
+    0xffffff,
+    3
+);
 
 directionalLight.position.set(
     100,
@@ -61,12 +60,12 @@ directionalLight.position.set(
 scene.add(directionalLight);
 
 // STL Model
-let shark = null;
+let model = null;
 
 const loader = new STLLoader();
 
 loader.load(
-    "./models/Shark.stl",
+    "./models/MolView-bas-print_NIH3D.stl",
 
     function (geometry) {
 
@@ -78,26 +77,26 @@ loader.load(
                 shininess: 100
             });
 
-        shark = new THREE.Mesh(
+        model = new THREE.Mesh(
             geometry,
             material
         );
 
-        shark.scale.set(
-            0.05,
-            0.05,
-            0.05
+        model.scale.set(
+            0.5,
+            0.5,
+            0.5
         );
 
-        scene.add(shark);
+        scene.add(model);
 
-        console.log("Shark STL Loaded");
+        console.log("STL Loaded Successfully");
     },
 
     undefined,
 
     function (error) {
-        console.error("STL Load Error:", error);
+        console.error(error);
     }
 );
 
@@ -116,15 +115,12 @@ const hands = new Hands({
 hands.setOptions({
 
     maxNumHands: 1,
-
     modelComplexity: 1,
-
     minDetectionConfidence: 0.7,
-
     minTrackingConfidence: 0.7
 });
 
-let scaleValue = 0.05;
+let scaleValue = 0.5;
 
 hands.onResults((results) => {
 
@@ -147,16 +143,16 @@ hands.onResults((results) => {
     const middle =
         hand[12];
 
-    if (shark) {
+    if (model) {
 
-        // Move Shark
-        shark.position.x =
+        // Move
+        model.position.x =
             (index.x - 0.5) * 150;
 
-        shark.position.y =
+        model.position.y =
             -(index.y - 0.5) * 150;
 
-        // Pinch Scale
+        // Scale
         const dx =
             thumb.x - index.x;
 
@@ -171,18 +167,18 @@ hands.onResults((results) => {
 
         scaleValue =
             THREE.MathUtils.clamp(
-                distance * 0.5,
-                0.02,
-                0.3
+                distance,
+                0.2,
+                2
             );
 
-        shark.scale.set(
+        model.scale.set(
             scaleValue,
             scaleValue,
             scaleValue
         );
 
-        // Rotate with 2 fingers
+        // Rotate
         const twoFingerMode =
             Math.abs(
                 index.y - middle.y
@@ -190,7 +186,7 @@ hands.onResults((results) => {
 
         if (twoFingerMode) {
 
-            shark.rotation.y += 0.05;
+            model.rotation.y += 0.05;
         }
     }
 });
@@ -213,7 +209,7 @@ const webcam =
 webcam.start();
 
 // Animation
-let swimTime = 0;
+let t = 0;
 
 function animate() {
 
@@ -223,15 +219,15 @@ function animate() {
 
     controls.update();
 
-    if (shark) {
+    if (model) {
 
-        swimTime += 0.03;
+        t += 0.03;
 
-        shark.position.z =
-            Math.sin(swimTime) * 10;
+        model.position.z =
+            Math.sin(t) * 10;
 
-        shark.rotation.z =
-            Math.sin(swimTime) * 0.1;
+        model.rotation.z =
+            Math.sin(t) * 0.1;
     }
 
     renderer.render(
