@@ -1,6 +1,12 @@
-body{
+*{
     margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+body{
     overflow:hidden;
+    background:black;
 }
 
 #viewer{
@@ -9,10 +15,18 @@ body{
 }
 
 #video{
+
     position:absolute;
-    width:240px;
-    bottom:20px;
+
     right:20px;
-    border:2px solid white;
-    z-index:10;
+
+    bottom:20px;
+
+    width:260px;
+
+    border-radius:12px;
+
+    border:3px solid white;
+
+    z-index:100;
 }
